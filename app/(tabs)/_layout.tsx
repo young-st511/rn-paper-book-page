@@ -25,7 +25,15 @@ export default function TabLayout() {
           },
           default: {},
         }),
-      }}>
+      }}
+    >
+      <Tabs.Screen
+        name="pager"
+        options={{
+          title: 'Pager',
+          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+        }}
+      />
       <Tabs.Screen
         name="index"
         options={{
