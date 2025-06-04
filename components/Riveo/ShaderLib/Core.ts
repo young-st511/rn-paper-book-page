@@ -31,11 +31,11 @@ bool inRRect(float2 p, float4 rct, float cornerRadius) {
 
 
 mat3 translate(vec2 p) {
-  return mat3(1.0,0.0,0.0,0.0,1.0,0.0,p.x,p.y,1.0);
+  return mat3(1.0,0.0,0.0, 0.0,1.0,0.0, p.x,p.y,1.0);
 }
 
 mat3 scale(vec2 s, vec2 p) {
-  return translate(p) * mat3(s.x,0.0,0.0,0.0,s.y,0.0,0.0,0.0,1.0) * translate(-p);
+  return translate(p) * mat3(s.x,0.0,0.0, 0.0,s.y,0.0, 0.0,0.0,1.0) * translate(-p);
 }
 
 vec2 project(vec2 p, mat3 m) {
