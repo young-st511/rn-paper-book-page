@@ -49,7 +49,10 @@ vec4 main(float2 xy) {
       ctx.color = image.eval(p1);
       ctx.color.rgb *= pow(saturate((r-d)/r), 0.2);
     } else {
-      ctx.color = image.eval(p1);
+      ctx.color = TRANSPARENT;
+      if (inRRect(xy, container, cornerRadius)) {
+        ctx.color.a = 0.5;
+      }
     }
   } else {
     float d1 = x + abs(d) + PI * r;
