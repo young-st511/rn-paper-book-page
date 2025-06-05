@@ -1,5 +1,7 @@
 import { frag } from '@/components/Riveo/ShaderLib';
 
+const SCALING_FACTOR = 1.05; // 중앙에서 확대 비율
+
 export const wavePageFlipShader = frag`
     uniform float uTime;
     uniform vec2 uResolution;
@@ -15,7 +17,13 @@ export const wavePageFlipShader = frag`
         
         // 복합 파도 효과로 새로운 좌표 계산
         vec2 waveOffset = vec2(wave1 + wave2, wave2 + wave3);
-        vec2 newCoord = fragCoord + waveOffset * uResolution;
+
+        float scale = 1. / ${SCALING_FACTOR};
+        
+        // 중앙에서 확대 (1.05배)
+        vec2 center = uResolution * 0.5;
+        vec2 scaledCoord = (fragCoord - center) * scale + center;
+        vec2 newCoord = scaledCoord + waveOffset * uResolution;
         
         // 왜곡된 좌표에서 원본 콘텐츠 샘플링
         return image.eval(newCoord);
