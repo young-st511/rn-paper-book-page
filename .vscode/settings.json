@@ -1,8 +1,6 @@
 {
   "editor.codeActionsOnSave": {
-    "source.fixAll": "explicit",
-    "source.organizeImports": "explicit",
     "source.sortMembers": "explicit"
   },
-  "cSpell.words": ["glsl", "Skia"]
+  "cSpell.words": ["glsl", "Pretendard", "Skia"]
 }
