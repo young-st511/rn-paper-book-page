@@ -1,8 +1,29 @@
-import { glsl } from "@/utils/utils";
-import { Skia } from "@shopify/react-native-skia";
+import { frag } from '@/components/Riveo/ShaderLib';
+
+export const wavePageFlipShader = frag`
+    uniform float uTime;
+    uniform vec2 uResolution;
+    uniform shader image;
+
+    half4 main(vec2 fragCoord) {
+        vec2 uv = fragCoord / uResolution;
+        
+        // 파도 효과를 위한 사인파 계산
+        float wave1 = sin(uv.x * 10.0 + uTime * 2.0) * 0.01;
+        float wave2 = sin(uv.y * 8.0 + uTime * 1.5) * 0.008;
+        float wave3 = sin((uv.x + uv.y) * 6.0 + uTime * 2.5) * 0.006;
+        
+        // 복합 파도 효과로 새로운 좌표 계산
+        vec2 waveOffset = vec2(wave1 + wave2, wave2 + wave3);
+        vec2 newCoord = fragCoord + waveOffset * uResolution;
+        
+        // 왜곡된 좌표에서 원본 콘텐츠 샘플링
+        return image.eval(newCoord);
+    }
+`;
 
 // 불규칙한 물결 페이지 넘김 셰이더
-export const wavePageFlipShader = Skia.RuntimeEffect.Make(glsl`
+export const wavePageFlipShader2 = frag`
 uniform float progress;     // 0.0 ~ 1.0 넘김 진행도
 uniform float time;         // 시간 (애니메이션용)
 uniform vec2 resolution;    // 화면 해상도
@@ -110,4 +131,4 @@ vec4 main(vec2 coord) {
     
     return finalColor;
 }
-`)!;
+`;
