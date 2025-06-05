@@ -11,6 +11,8 @@ import {
   rect,
   useFonts,
   matchFont,
+  BackdropBlur,
+  Fill,
 } from '@shopify/react-native-skia';
 import React, { useEffect } from 'react';
 import { Dimensions, View, Text as RNText } from 'react-native';
@@ -27,7 +29,7 @@ const WaveEffectImage = () => {
     ],
   });
 
-  const image = useImage(require('../../assets/images/forest.png'));
+  const image = useImage(require('../../assets/images/beach-floor.png'));
   const time = useSharedValue(0);
 
   useEffect(() => {
@@ -72,7 +74,14 @@ const WaveEffectImage = () => {
               </Paint>
             }
           >
-            <Image image={image} x={0} y={0} width={screenWidth} height={screenHeight} fit="cover" />
+            <Image
+              image={image}
+              x={0}
+              y={0}
+              width={screenWidth + image.width() / 3}
+              height={screenHeight}
+              fit="cover"
+            />
             <Text x={screenWidth / 2 - 100} y={screenHeight / 2} text="안녕하세요" font={font} color="#222" />
             <Text
               x={screenWidth / 2 - 130}
@@ -82,6 +91,9 @@ const WaveEffectImage = () => {
               color="#878"
             />
           </Group>
+          <BackdropBlur blur={1.7}>
+            <Fill color="rgba(125, 195, 255, 0.2)" />
+          </BackdropBlur>
         </Group>
       </Canvas>
     </View>
