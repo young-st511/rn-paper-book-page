@@ -1,27 +1,24 @@
 import { wavePageFlipShader } from '@/libs/Wave/glsl/wavePageShader';
 import { waterDropShader } from '@/libs/Wave/glsl/waveWaterDrop';
 import {
+  BackdropBlur,
+  Blur,
   Canvas,
+  Fill,
   Group,
   Image,
+  matchFont,
+  Paint,
+  rect,
   RuntimeShader,
   Text,
   Uniforms,
-  useImage,
-  Paint,
-  rect,
   useFonts,
-  matchFont,
-  BackdropBlur,
-  Fill,
-  Rect,
-  LinearGradient,
-  vec,
-  Line,
+  useImage
 } from '@shopify/react-native-skia';
 import React, { useEffect } from 'react';
-import { Dimensions, View, Text as RNText } from 'react-native';
-import { Easing, useDerivedValue, useSharedValue, withRepeat, withTiming } from 'react-native-reanimated';
+import { Dimensions, Text as RNText, View } from 'react-native';
+import { Easing, useDerivedValue, useSharedValue, withDelay, withRepeat, withTiming } from 'react-native-reanimated';
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
@@ -39,6 +36,8 @@ const WaveEffectImage = () => {
 
   const cycle = useSharedValue(0); // 사이클 카운터
 
+  const textBlurTime = useSharedValue(0); // 텍스트 블러 시간
+
   // 물방울 데이터를 cycle에 따라 생성
   const dropData = useDerivedValue(() => {
     const drops = [];
@@ -50,7 +49,7 @@ const WaveEffectImage = () => {
       });
     }
     return drops;
-  }, [cycle.value]);
+  }, [cycle]);
 
   useEffect(() => {
     time.value = withRepeat(
@@ -62,10 +61,18 @@ const WaveEffectImage = () => {
       false // reverse 없이
     );
 
+    textBlurTime.value = withDelay(
+      1000,
+      withTiming(100, {
+        duration: 20000,
+        easing: Easing.sin,
+      })
+    );
+
     setInterval(() => {
       cycle.value += 1; // 사이클 증가
     }, 5000); // 10초마다 사이클 증가
-  }, [time]);
+  }, [cycle, textBlurTime, time]);
 
   const waveUniforms = useDerivedValue<Uniforms>(() => ({
     uTime: time.value,
@@ -140,14 +147,17 @@ const WaveEffectImage = () => {
                 height={screenHeight}
                 fit="cover"
               />
-              <Text x={screenWidth / 2 - 100} y={screenHeight / 2} text="안녕하세요" font={font} color="#222" />
-              <Text
-                x={screenWidth / 2 - 130}
-                y={screenHeight / 2 + 50}
-                text="여긴 물 속 입니다."
-                font={font}
-                color="#878"
-              />
+              <Group>
+                <Text x={screenWidth / 2 - 100} y={screenHeight / 2} text="원수는 물에" font={font} color="#222" />
+                <Text
+                  x={screenWidth / 2 - 130}
+                  y={screenHeight / 2 + 50}
+                  text="은혜는 돌에 새기라"
+                  font={font}
+                  color="#878"
+                />
+                <Blur blur={textBlurTime} />
+              </Group>
               {/* 테스트용 줄무늬 */}
               {/* {[...Array(25)].map((_, i) => (
                 <Line
@@ -155,7 +165,7 @@ const WaveEffectImage = () => {
                   p1={vec((i * screenWidth) / 24, 0)}
                   p2={vec((i * screenWidth) / 24, screenHeight)}
                   color={'#000'}
-                  strokeWidth={12}
+                  strokeWidth={3}
                 />
               ))} */}
             </Group>
