@@ -18,46 +18,48 @@ export const waterDropShader = frag`
     uniform float uDropStart3;
     uniform float uDropStart4;
     
-    uniform float uDropActive0;
-    uniform float uDropActive1;
-    uniform float uDropActive2;
-    uniform float uDropActive3;
-    uniform float uDropActive4;
-
     half4 main(vec2 fragCoord) {
         vec2 uv = fragCoord / uResolution;
         vec2 totalOffset = vec2(0.0);
+        float totalShadow = 0.0;
         
-        float cycleTime = mod(uTime, 12.0 * 3.14159);
+        float cycleTime = uTime; // 0~1 범위
         
-        // 물방울 데이터 배열 (GLSL에서는 동적 배열 대신 개별 변수 사용)
+        // 물방울 데이터 배열
         vec2 centers[5];
         float startTimes[5];
         float actives[5];
         
-        centers[0] = uDropCenter0; startTimes[0] = uDropStart0; actives[0] = uDropActive0;
-        centers[1] = uDropCenter1; startTimes[1] = uDropStart1; actives[1] = uDropActive1;
-        centers[2] = uDropCenter2; startTimes[2] = uDropStart2; actives[2] = uDropActive2;
-        centers[3] = uDropCenter3; startTimes[3] = uDropStart3; actives[3] = uDropActive3;
-        centers[4] = uDropCenter4; startTimes[4] = uDropStart4; actives[4] = uDropActive4;
+        centers[0] = uDropCenter0; startTimes[0] = uDropStart0;
+        centers[1] = uDropCenter1; startTimes[1] = uDropStart1;
+        centers[2] = uDropCenter2; startTimes[2] = uDropStart2;
+        centers[3] = uDropCenter3; startTimes[3] = uDropStart3;
+        centers[4] = uDropCenter4; startTimes[4] = uDropStart4;
         
         for(int i = 0; i < 5; i++) {
-            // 비활성 물방울 스킵
-            if(actives[i] < 0.5) continue;
+            // startTimes도 0~1 범위로 정규화 (8초 → 1)
+            float normalizedStartTime = startTimes[i] / 8.0;
             
             // 시작 시간 체크
-            if(cycleTime < startTimes[i]) continue;
+            if(cycleTime < normalizedStartTime) continue;
             
-            // 물방울 생명주기 계산
-            float dropAge = (cycleTime - startTimes[i]) / 4.0; // 4초 동안 지속
+            // 물방울 생명주기 계산 (0.5 = 4초/8초)
+            float dropAge = (cycleTime - normalizedStartTime) / 0.5;
             if(dropAge > 1.0) continue;
             
-            // ripple 계산
-            float radius = dropAge * 0.6; // 최대 반지름
+            float radius = dropAge * 0.6;
             float dist = distance(uv, centers[i]);
             
+            // 그림자 효과
+            float shadowRadius = radius + 0.04;
+            if(dist < shadowRadius && shadowRadius > 0.02) {
+                float shadowIntensity = smoothstep(radius - 0.01, radius + 0.03, dist);
+                float shadowFade = exp(-dist * 2.0) * (1.0 - dropAge) * 0.06;
+                totalShadow += shadowFade * shadowIntensity;
+            }
+            
+            // ripple 효과
             if(dist < radius && radius > 0.01) {
-                // 여러 개의 동심원 파문
                 float wave1 = sin((dist - radius * 0.3) * 25.0);
                 float wave2 = sin((dist - radius * 0.6) * 15.0) * 0.5;
                 float wave = wave1 + wave2;
@@ -73,6 +75,11 @@ export const waterDropShader = frag`
         }
         
         vec2 newCoord = fragCoord + totalOffset * uResolution;
-        return image.eval(newCoord);
+        vec4 originalColor = image.eval(newCoord);
+        
+        float shadowFactor = 1.0 - clamp(totalShadow, 0.0, 0.06);
+        originalColor.rgb *= shadowFactor;
+        
+        return originalColor;
     }
 `;

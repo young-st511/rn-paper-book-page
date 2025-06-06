@@ -7,6 +7,7 @@ import {
   Fill,
   Group,
   Image,
+  Line,
   matchFont,
   Paint,
   rect,
@@ -14,7 +15,8 @@ import {
   Text,
   Uniforms,
   useFonts,
-  useImage
+  useImage,
+  vec,
 } from '@shopify/react-native-skia';
 import React, { useEffect } from 'react';
 import { Dimensions, Text as RNText, View } from 'react-native';
@@ -33,6 +35,8 @@ const WaveEffectImage = () => {
 
   const image = useImage(require('../../assets/images/beach-floor.png'));
   const time = useSharedValue(0);
+
+  const waterDropTime = useSharedValue(0); // 물방울 애니메이션 시간
 
   const cycle = useSharedValue(0); // 사이클 카운터
 
@@ -61,6 +65,15 @@ const WaveEffectImage = () => {
       false // reverse 없이
     );
 
+    waterDropTime.value = withRepeat(
+      withTiming(1.0, {
+        duration: 10000,
+        easing: Easing.linear,
+      }),
+      -1, // 무한 반복
+      false // reverse 없이
+    );
+
     textBlurTime.value = withDelay(
       1000,
       withTiming(100, {
@@ -72,7 +85,11 @@ const WaveEffectImage = () => {
     setInterval(() => {
       cycle.value += 1; // 사이클 증가
     }, 5000); // 10초마다 사이클 증가
-  }, [cycle, textBlurTime, time]);
+  }, [cycle, textBlurTime, time, waterDropTime]);
+
+  const test = useDerivedValue(() => {
+    return vec(40, 40 + waterDropTime.value * (screenHeight - 40));
+  });
 
   const waveUniforms = useDerivedValue<Uniforms>(() => ({
     uTime: time.value,
@@ -82,7 +99,7 @@ const WaveEffectImage = () => {
   const dropUniforms = useDerivedValue<Uniforms>(() => {
     const data = dropData.value;
     return {
-      uTime: time.value,
+      uTime: waterDropTime.value,
       uResolution: [screenWidth, screenHeight],
 
       // 5개 물방울 데이터
@@ -97,16 +114,10 @@ const WaveEffectImage = () => {
       uDropStart2: data[2].startTime,
       uDropStart3: data[3].startTime,
       uDropStart4: data[4].startTime,
-
-      uDropActive0: data[0].active,
-      uDropActive1: data[1].active,
-      uDropActive2: data[2].active,
-      uDropActive3: data[3].active,
-      uDropActive4: data[4].active,
     };
   });
 
-  if (!pretendardFonts) return <View style={{ width: 100, height: 100, backgroundColor: '#f99' }} />;
+  if (!pretendardFonts) return null;
 
   const font = matchFont({ fontFamily: 'Pretendard', fontWeight: '500', fontSize: 40 }, pretendardFonts);
 
@@ -147,6 +158,8 @@ const WaveEffectImage = () => {
                 height={screenHeight}
                 fit="cover"
               />
+              {/* Timer TEST */}
+              {/* <Line p1={vec(40, 40)} p2={test} strokeWidth={8} color={'#770'} /> */}
               <Group>
                 <Text x={screenWidth / 2 - 100} y={screenHeight / 2} text="원수는 물에" font={font} color="#222" />
                 <Text
