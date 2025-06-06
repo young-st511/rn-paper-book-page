@@ -4,6 +4,8 @@ export const waterDropShader = frag`
     uniform float uTime;
     uniform vec2 uResolution;
     uniform shader image;
+
+    uniform float uDropCycleTime; // 물방울 주기 (초 단위)
     
     // 5개 물방울의 데이터 (JavaScript에서 전달)
     uniform vec2 uDropCenter0;
@@ -23,7 +25,7 @@ export const waterDropShader = frag`
         vec2 totalOffset = vec2(0.0);
         float totalShadow = 0.0;
         
-        float cycleTime = uTime; // 0~1 범위
+        float currentCycleTime = uTime; // 0~1 범위
         
         // 물방울 데이터 배열
         vec2 centers[5];
@@ -37,24 +39,24 @@ export const waterDropShader = frag`
         centers[4] = uDropCenter4; startTimes[4] = uDropStart4;
         
         for(int i = 0; i < 5; i++) {
-            // startTimes도 0~1 범위로 정규화 (8초 → 1)
-            float normalizedStartTime = startTimes[i] / 8.0;
+            // startTimes도 0~1 범위로 정규화 (uDropCycleTime → 1)
+            float normalizedStartTime = startTimes[i] / uDropCycleTime;
             
             // 시작 시간 체크
-            if(cycleTime < normalizedStartTime) continue;
+            if(currentCycleTime < normalizedStartTime) continue;
             
-            // 물방울 생명주기 계산 (0.5 = 4초/8초)
-            float dropAge = (cycleTime - normalizedStartTime) / 0.5;
+            // 물방울 생명주기 계산
+            float dropAge = (currentCycleTime - normalizedStartTime) / 0.5;
             if(dropAge > 1.0) continue;
             
-            float radius = dropAge * 0.6;
-            float dist = distance(uv, centers[i]);
+            float radius = dropAge * 0.4 + 0.01; // 물방울 반지름 (0.01 ~ 0.41)
+            float dist = distance(uv, centers[i]); // Drop 중심과 현재 픽셀 간 거리
             
             // 그림자 효과
             float shadowRadius = radius + 0.04;
             if(dist < shadowRadius && shadowRadius > 0.02) {
-                float shadowIntensity = smoothstep(radius - 0.01, radius + 0.03, dist);
-                float shadowFade = exp(-dist * 2.0) * (1.0 - dropAge) * 0.06;
+                float shadowIntensity = smoothstep(radius - 0.005, radius + 0.04, dist);
+                float shadowFade = exp(-dist * 2.0) * (1.0 - dropAge) * 0.04;
                 totalShadow += shadowFade * shadowIntensity;
             }
             
@@ -64,12 +66,12 @@ export const waterDropShader = frag`
                 float wave2 = sin((dist - radius * 0.6) * 15.0) * 0.5;
                 float wave = wave1 + wave2;
                 
-                float fade = exp(-dist * 3.0) * (1.0 - dropAge) * 0.8;
+                float fade = exp(-dist * 3.0) * (1.0 - dropAge) * 0.6;
                 float ripple = wave * fade;
                 
                 vec2 direction = normalize(uv - centers[i]);
                 if(dist > 0.001) {
-                    totalOffset += direction * ripple * 0.015;
+                    totalOffset += direction * ripple * 0.02;
                 }
             }
         }

@@ -59,6 +59,10 @@ const WaveEffectImage = () => {
   const dropData = useSharedValue(getRandomWaterDropData(5));
 
   useEffect(() => {
+    //! TEST
+    // time.value = Math.PI * 1.4219;
+    // waterDropTime.value = 0.5;
+
     time.value = withRepeat(
       withTiming(Math.PI * 12, {
         duration: 60000,
