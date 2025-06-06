@@ -24,6 +24,21 @@ import { Easing, useDerivedValue, useSharedValue, withDelay, withRepeat, withTim
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
+const getRandomWaterDropData = (dropNumber: number) => {
+  const drops = [];
+  for (let i = 0; i < dropNumber; i++) {
+    drops.push({
+      center: [0.1 + Math.random() * 0.8, 0.1 + Math.random() * 0.8],
+      startTime: Math.random() * 6.0, // 0~6초 사이 시작
+      active: 1, // 100% 확률로 활성화
+    });
+  }
+  return drops;
+};
+
+const WATER_DROP_CYCLE_TIME = 10; // 물방울 주기 (초 단위)
+const SEC = 1000;
+
 const WaveEffectImage = () => {
   const pretendardFonts = useFonts({
     Pretendard: [
@@ -38,22 +53,10 @@ const WaveEffectImage = () => {
 
   const waterDropTime = useSharedValue(0); // 물방울 애니메이션 시간
 
-  const cycle = useSharedValue(0); // 사이클 카운터
-
   const textBlurTime = useSharedValue(0); // 텍스트 블러 시간
 
   // 물방울 데이터를 cycle에 따라 생성
-  const dropData = useDerivedValue(() => {
-    const drops = [];
-    for (let i = 0; i < 5; i++) {
-      drops.push({
-        center: [0.1 + Math.random() * 0.8, 0.1 + Math.random() * 0.8],
-        startTime: Math.random() * 6.0, // 0~6초 사이 시작
-        active: 1, // 100% 확률로 활성화
-      });
-    }
-    return drops;
-  }, [cycle]);
+  const dropData = useSharedValue(getRandomWaterDropData(5));
 
   useEffect(() => {
     time.value = withRepeat(
@@ -67,7 +70,7 @@ const WaveEffectImage = () => {
 
     waterDropTime.value = withRepeat(
       withTiming(1.0, {
-        duration: 10000,
+        duration: WATER_DROP_CYCLE_TIME * SEC,
         easing: Easing.linear,
       }),
       -1, // 무한 반복
@@ -83,9 +86,9 @@ const WaveEffectImage = () => {
     );
 
     setInterval(() => {
-      cycle.value += 1; // 사이클 증가
-    }, 5000); // 10초마다 사이클 증가
-  }, [cycle, textBlurTime, time, waterDropTime]);
+      dropData.value = getRandomWaterDropData(5); // 10초마다 새로운 물방울 데이터 생성
+    }, WATER_DROP_CYCLE_TIME * SEC); // 10초마다 사이클 증가
+  }, [dropData, textBlurTime, time, waterDropTime]);
 
   const test = useDerivedValue(() => {
     return vec(40, 40 + waterDropTime.value * (screenHeight - 40));
@@ -101,6 +104,7 @@ const WaveEffectImage = () => {
     return {
       uTime: waterDropTime.value,
       uResolution: [screenWidth, screenHeight],
+      uDropCycleTime: WATER_DROP_CYCLE_TIME,
 
       // 5개 물방울 데이터
       uDropCenter0: data[0].center,
