@@ -24,20 +24,19 @@ import { Easing, useDerivedValue, useSharedValue, withDelay, withRepeat, withTim
 
 const { width: screenWidth, height: screenHeight } = Dimensions.get('window');
 
+const WATER_DROP_CYCLE_TIME = 10; // 물방울 주기 (초 단위)
+const SEC = 1000;
+
 const getRandomWaterDropData = (dropNumber: number) => {
   const drops = [];
   for (let i = 0; i < dropNumber; i++) {
     drops.push({
-      center: [0.1 + Math.random() * 0.8, 0.1 + Math.random() * 0.8],
-      startTime: Math.random() * 6.0, // 0~6초 사이 시작
-      active: 1, // 100% 확률로 활성화
+      center: [0.1 + Math.random() * 0.8, 0.15 + Math.random() * 0.7],
+      startTime: Math.random() * (WATER_DROP_CYCLE_TIME - 3), // 0~7초 사이 시작
     });
   }
   return drops;
 };
-
-const WATER_DROP_CYCLE_TIME = 10; // 물방울 주기 (초 단위)
-const SEC = 1000;
 
 const WaveEffectImage = () => {
   const pretendardFonts = useFonts({
@@ -56,7 +55,7 @@ const WaveEffectImage = () => {
   const textBlurTime = useSharedValue(0); // 텍스트 블러 시간
 
   // 물방울 데이터를 cycle에 따라 생성
-  const dropData = useSharedValue(getRandomWaterDropData(5));
+  const dropData = useSharedValue(getRandomWaterDropData(4));
 
   useEffect(() => {
     //! TEST
@@ -90,7 +89,7 @@ const WaveEffectImage = () => {
     );
 
     setInterval(() => {
-      dropData.value = getRandomWaterDropData(5); // 10초마다 새로운 물방울 데이터 생성
+      dropData.value = getRandomWaterDropData(4);
     }, WATER_DROP_CYCLE_TIME * SEC); // 10초마다 사이클 증가
   }, [dropData, textBlurTime, time, waterDropTime]);
 
@@ -115,13 +114,11 @@ const WaveEffectImage = () => {
       uDropCenter1: data[1].center,
       uDropCenter2: data[2].center,
       uDropCenter3: data[3].center,
-      uDropCenter4: data[4].center,
 
       uDropStart0: data[0].startTime,
       uDropStart1: data[1].startTime,
       uDropStart2: data[2].startTime,
       uDropStart3: data[3].startTime,
-      uDropStart4: data[4].startTime,
     };
   });
 
